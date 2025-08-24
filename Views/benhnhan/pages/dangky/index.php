@@ -1,172 +1,358 @@
 <?php
-// File xử lý đăng ký
 include_once("Controllers/ctaikhoan.php");
+include_once("Controllers/ctinhthanhpho.php");
+include_once ("Controllers/cxaphuong.php");
 
-$message = ""; // Biến chứa thông báo
+$cthanhpho = new cTinhThanhPho();
+$thanhpho_list = $cthanhpho->get_tinhthanhpho();
 
+$cxaphuong = new cXaPhuong();
+$xaphuong_list = $cxaphuong->get_xaphuong();
+$message = "";
+
+// Xử lý khi submit
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Lấy dữ liệu từ form
     $email = $_POST['email'];
     $hoten = $_POST['fullname'];
     $ngaysinh = $_POST['dob'];
+    $cccd = $_POST['cccd'];
+    $gioitinh = $_POST['gender'];
+    $nghenghiep = $_POST['job'];
+    $tiensu = $_POST['history'];
+    $sonha = $_POST['sonha'];
+    $xa = $_POST['xa'];
+    $tinh = $_POST['tinh'];
     $matkhau = $_POST['password'];
     $confirmMatkhau = $_POST['confirm-password'];
 
-    // Kiểm tra các trường có rỗng không
-    if (empty($email) || empty($hoten) || empty($ngaysinh) || empty($matkhau) || empty($confirmMatkhau)) {
-      $message = "Tất cả các trường đều phải được điền đầy đủ.";
-  } elseif (!preg_match("/^[a-zA-ZÀ-ỹ\s]+$/u", $hoten)) {
-      // Kiểm tra họ tên chỉ chứa chữ cái và khoảng trắng
-      $message = "Họ tên chỉ được chứa chữ cái và khoảng trắng.";
-  } elseif (!isOver18($ngaysinh)) {
-      // Kiểm tra đủ 18 tuổi
-      $message = "Bạn phải đủ 18 tuổi để đăng ký.";
-  } elseif ($matkhau !== $confirmMatkhau) {
-      // Kiểm tra mật khẩu nhập lại có khớp không
-      $message = "Mật khẩu nhập lại không khớp.";
-  } else {
-      // Gọi controller để xử lý đăng ký
-      $controller = new cTaiKhoan();
-      $result = $controller->dangkytk($email, $hoten, $ngaysinh, $matkhau);
-
-      if ($result === "email_ton_tai") {
-          $message = "Email đã tồn tại. Vui lòng chọn email khác.";
-      } elseif ($result === true) {
-          echo "<script>
-              alert('Đăng ký thành công! Đang chuyển hướng...');
-              setTimeout(function() {
-                  window.location.href = '?dangnhap';
-              }, 200);
-          </script>";
-          exit();
-      } else {
-          $message = "Đã có lỗi xảy ra khi tạo tài khoản.";
+    // File upload
+    function uploadFile($fileInput){
+      if(isset($_FILES[$fileInput]) && $_FILES[$fileInput]['error']==0){
+          $ext = pathinfo($_FILES[$fileInput]['name'], PATHINFO_EXTENSION);
+          if(!in_array(strtolower($ext), ['jpg','jpeg','png'])) return "";
+          $path = 'Assets/img/'.uniqid('cccd_').'.'.$ext;
+          if(move_uploaded_file($_FILES[$fileInput]['tmp_name'], $path)) return $path;
       }
-  }
+      return "";
+    }
+
+    $cccd_truoc_path = uploadFile('cccd_truoc');
+    $cccd_sau_path = uploadFile('cccd_sau');
+    $birth_cert_path = uploadFile('birth_cert');
+    $gh_cccd_truoc_path = uploadFile('gh_cccd_truoc');
+    $gh_cccd_sau_path = uploadFile('gh_cccd_sau');
+
+    // Validate cơ bản
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $message = "Email không hợp lệ.";
+    } elseif (!preg_match("/^[0-9]{9,12}$/", $cccd)) {
+        $message = "Số CCCD không hợp lệ (9-12 số).";
+    } elseif (!preg_match("/^[a-zA-ZÀ-ỹ\s]+$/u", $hoten)) {
+        $message = "Họ tên chỉ được chứa chữ cái và khoảng trắng.";
+    } elseif ($matkhau !== $confirmMatkhau) {
+        $message = "Mật khẩu nhập lại không khớp.";
+    } elseif (strlen($matkhau) < 6) {
+        $message = "Mật khẩu phải từ 6 ký tự trở lên.";
+    } else {
+        $age = getAge($ngaysinh);
+
+        // Nếu cần người giám hộ
+        $guardian = null;
+        if ($age < 18 || $age > 60) {
+            $guardian = [
+                "hoten" => $_POST['gh_hoten'],
+                "ngaysinh" => $_POST['gh_dob'],
+                "diachi" => $_POST['gh_diachi'],
+                "sdt" => $_POST['gh_sdt'],
+                "cccd" => $_POST['gh_cccd'],
+                "cccd_truoc" => $_FILES['gh_cccd_truoc']['name'],
+                "cccd_sau" => $_FILES['gh_cccd_sau']['name']
+            ];
+
+            if (empty($guardian['hoten']) || empty($guardian['sdt']) || empty($guardian['cccd'])) {
+                $message = "Bạn cần nhập đầy đủ thông tin người giám hộ.";
+            } elseif (!preg_match("/^[0-9]{10}$/", $guardian['sdt'])) {
+                $message = "Số điện thoại giám hộ không hợp lệ.";
+            }
+        }
+
+        // Nếu không có lỗi thì gọi controller
+        if ($message == "") {
+            $controller = new cTaiKhoan();
+            $result = $controller->dangkytk_full($email, $hoten, $ngaysinh, $cccd, $gioitinh, $nghenghiep, $tiensu, $sonha, $xa, $huyen, $tinh, $matkhau, $cccd_truoc, $cccd_sau, $guardian);
+
+            if ($result === "email_ton_tai") {
+                $message = "Email đã tồn tại.";
+            } elseif ($result === true) {
+                echo "<script>alert('Đăng ký thành công!');window.location='?dangnhap';</script>";
+                exit();
+            } else {
+                $message = "Đã có lỗi xảy ra khi tạo tài khoản.";
+            }
+        }
+    }
 }
 
-// Hàm kiểm tra người dùng đủ 18 tuổi chưa
-function isOver18($dob) {
-  $dobTimestamp = strtotime($dob);
-  $today = strtotime(date("Y-m-d"));
-  $age = floor(($today - $dobTimestamp) / (365.25 * 24 * 60 * 60));
-  return $age >= 18;
+function getAge($dob) {
+    $dobTimestamp = strtotime($dob);
+    $today = strtotime(date("Y-m-d"));
+    return floor(($today - $dobTimestamp) / (365.25*24*60*60));
 }
 ?>
+<style>
+  .register-box{margin:auto;margin-top:100px;background:#fff;padding:20px;border-radius:10px;width:95%;max-width:600px}
+  label{display:block;margin-top:10px;font-weight:500}
+  input,select,textarea{width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;margin-top:5px}
+  button{margin-top:20px;padding:12px;width:100%;background:#6f42c1;color:#fff;border:none;border-radius:8px;cursor:pointer}
+  .cccd-preview {
+    margin-top: 10px;
+    width: 150px;      /* chiều rộng ảnh */
+    height: auto;      /* tự động theo tỷ lệ */
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    display: block;
+  }
+</style>
+<script>
+  function toggleGuardian() {
+    let dob = document.getElementById("dob").value;
+    if (!dob) return;
 
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Đăng ký tài khoản</title>
-  <style>
-    .register-box {
-        margin:auto;
-        margin-top: 100px;
-        background-color: #ffffff;
-        padding: 40px 30px;
-        border-radius: 12px;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-        width: 100%;
-        max-width: 450px;
-        text-align: center;
+    let birth = new Date(dob);
+    let today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    let m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+
+    const cccdSection = document.getElementById("cccd-section");
+    const birthCertSection = document.getElementById("birth-cert-section");
+    const guardianInfo = document.getElementById("guardian-info");
+
+    if (age < 16) {
+        // Trẻ em => giấy khai sinh
+        cccdSection.style.display = "none";
+        contact.style.display ="none";
+        birthCertSection.style.display = "block";
+    } else {
+        // >=16 tuổi => CCCD
+        cccdSection.style.display = "block";
+        contact.style.display ="block";
+        birthCertSection.style.display = "none";
+    }
+    // Thông tin giám hộ (<18 hoặc >60)
+    guardianInfo.style.display = (age < 18 || age > 60) ? "block" : "none";
+  }
+  function previewImage(input, previewId) {
+    const file = input.files[0];
+    if (!file) return;
+
+    // Kiểm tra loại file có phải ảnh
+    if (!file.type.startsWith("image/")) {
+        alert("Vui lòng chọn đúng định dạng ảnh (jpg, png...)");
+        input.value = "";
+        return;
     }
 
-    .register-box img.logo {
-      width: 100px;
-      height: auto;
-      margin-bottom: 20px;
+    // Tạo link tạm cho ảnh và gán vào img
+      const img = document.getElementById(previewId);
+      img.src = URL.createObjectURL(file);
+      img.style.display = "block";
+
+      // Giải phóng URL khi đổi ảnh (tránh rò rỉ bộ nhớ)
+      img.onload = function() {
+          URL.revokeObjectURL(img.src);
+      };
+  }
+
+  // Chặn console.log in file
+  (function() {
+      const originalLog = console.log;
+      console.log = function(...args) {
+          if (args.some(arg => arg instanceof File)) {
+              return; // bỏ qua nếu log file
+          }
+          originalLog.apply(console, args);
+      };
+  })();
+
+  function toggleOtherJob() {
+    let jobSelect = document.getElementById("job");
+    let jobOther = document.getElementById("job-other");
+    if (jobSelect.value === "Khác") {
+        jobOther.style.display = "block";
+        jobOther.required = true;
+    } else {
+        jobOther.style.display = "none";
+        jobOther.required = false;
     }
+  }
 
-    .register-box h2 {
-      color: #6f42c1;
-      margin-bottom: 30px;
-    }
+  function loadXaPhuong() {
+    const tinhSelect = document.getElementById("tinh");
+    const xaSelect = document.getElementById("xa");
+    const mathanhpho = tinhSelect.value;
 
-    label {
-      display: block;
-      text-align: left;
-      margin-bottom: 8px;
-      font-weight: 500;
-      color: #333;
-    }
+    // Xóa các option cũ
+    xaSelect.innerHTML = '<option value="">--Chọn Xã/Phường--</option>';
+    const xaphuongs = <?php echo json_encode($xaphuong_list); ?>;
+    const xaphuongs_matinh = xaphuongs.filter(p => p.matinhthanhpho === mathanhpho);
 
-    input[type="text"],
-    input[type="email"],
-    input[type="date"],
-    input[type="password"] {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      font-size: 16px;
-      box-sizing: border-box;
-      transition: border-color 0.3s ease;
-    }
+    xaphuongs_matinh.forEach(h => {
+        const option = document.createElement('option');
+        option.value = h.maxaphuong;
+        option.textContent = `${h.tenxaphuong}`;
+        xaSelect.appendChild(option);
+    });
+  }
 
-    input:focus {
-      outline: none;
-      border-color: #6f42c1;
-    }
+  
+  function gh_loadXaPhuong() {
+    const tinhSelect = document.getElementById("gh_tinh");
+    const xaSelect = document.getElementById("gh_xa");
+    const mathanhpho = tinhSelect.value;
 
-    button {
-      width: 100%;
-      padding: 12px;
-      background-color: rgb(85, 45, 125);
-      color: white;
-      font-size: 16px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
+    // Xóa các option cũ
+    xaSelect.innerHTML = '<option value="">--Chọn Xã/Phường--</option>';
+    const xaphuongs = <?php echo json_encode($xaphuong_list); ?>;
+    const xaphuongs_matinh = xaphuongs.filter(p => p.matinhthanhpho === mathanhpho);
 
-    button:hover {
-      background-color: #5a34a5;
-    }
+    xaphuongs_matinh.forEach(h => {
+        const option = document.createElement('option');
+        option.value = h.maxaphuong;
+        option.textContent = `${h.tenxaphuong}`;
+        xaSelect.appendChild(option);
+    });
+  }
+</script>
+<div class="register-box">
+  <h2>Đăng ký tài khoản</h2>
+  <?php if($message!=""): ?>
+    <script>alert("<?php echo $message;?>");</script>
+  <?php endif; ?>
+  <form method="POST" enctype="multipart/form-data">
+    <label>Họ tên:</label>
+    <input type="text" name="fullname" required>
 
-    @media (max-width: 480px) {
-      .register-box {
-        padding: 30px 20px;
-      }
-    }
-  </style>
-</head>
-<body>
+    <label>Giới tính:</label>
+    <select name="gender" required>
+      <option value="">--Chọn--</option>
+      <option value="Nam">Nam</option>
+      <option value="Nữ">Nữ</option>
+      <option value="Khác">Khác</option>
+    </select>
 
-  <div class="register-box">
-    <img src="Assets/img/logo-banner.png" alt="Logo" class="logo" />
-    <h2>Đăng ký tài khoản</h2>
+    <label>Ngày sinh:</label>
+      <input type="date" name="dob" id="dob" 
+      required 
+      max="<?php echo date('Y-m-d'); ?>" 
+      min="<?php echo date('Y-m-d', strtotime('-120 years')); ?>"
+      onchange="toggleGuardian()">
 
-    <!-- Hiển thị thông báo với alert -->
-    <?php if ($message != ""): ?>
-      <script type="text/javascript">
-        alert("<?php echo $message; ?>");
-      </script>
-    <?php endif; ?>
+    <div id="contact">
+      <label>Email:</label>
+      <input type="email" name="email" required>
 
-    <form action="" method="POST">
+      <label>Số Điện Thoại:</label>
+      <input type="sdt" name="sdt" required>
+    </div>
     
-      <label for="email">Email:</label>
-      <input type="email" id="email" name="email" placeholder="Nhập email" required />
+    <!-- Nhập CCCD -->
+    <div id="cccd-section">
+      <label>Số CCCD:</label>
+      <input type="text" name="cccd">
 
-      <label for="fullname">Họ tên:</label>
-      <input type="text" id="fullname" name="fullname" placeholder="Nhập họ và tên" required />
+      <label>CCCD mặt trước:</label>
+      <input type="file" name="cccd_truoc" accept="image/*" onchange="previewImage(this, 'preview-truoc')">
+      <img id="preview-truoc" class="cccd-preview" style="display:none"/>
 
-      <label for="dob">Ngày sinh:</label>
-      <input type="date" id="dob" name="dob" required />
+      <label>CCCD mặt sau:</label>
+      <input type="file" name="cccd_sau" accept="image/*" onchange="previewImage(this, 'preview-sau')">
+      <img id="preview-sau" class="cccd-preview" style="display:none"/>
+    </div>
 
-      <label for="password">Mật khẩu:</label>
-      <input type="password" id="password" name="password" placeholder="Nhập mật khẩu" required />
+    <!-- Giấy khai sinh -->
+    <div id="birth-cert-section" style="display:none;">
+      <label>Giấy khai sinh:</label>
+      <input type="file" name="birth_cert" accept="image/*" onchange="previewImage(this, 'preview-birth')">
+      <img id="preview-birth" class="cccd-preview" style="display:none"/>
+    </div>
 
-      <label for="confirm-password">Nhập lại mật khẩu:</label>
-      <input type="password" id="confirm-password" name="confirm-password" placeholder="Nhập lại mật khẩu" required />
+    <label>Nghề nghiệp:</label>
+    <select name="job" id="job" onchange="toggleOtherJob()">
+      <option value="">--Chọn nghề nghiệp--</option>
+      <option value="Học sinh">Học sinh</option>
+      <option value="Sinh viên">Sinh viên</option>
+      <option value="Công nhân">Công nhân</option>
+      <option value="Nông dân">Nông dân</option>
+      <option value="Nhân viên văn phòng">Nhân viên văn phòng</option>
+      <option value="Kinh doanh tự do">Kinh doanh tự do</option>
+      <option value="Bác sĩ">Bác sĩ</option>
+      <option value="Y tá/Điều dưỡng">Y tá/Điều dưỡng</option>
+      <option value="Kỹ sư">Kỹ sư</option>
+      <option value="Giáo viên">Giáo viên</option>
+      <option value="Nghỉ hưu">Nghỉ hưu</option>
+      <option value="Khác">Khác</option>
+    </select>
 
-      <button type="submit">Đăng ký</button>
-    </form>
-  </div>
+    <input type="text" name="job_other" id="job-other" placeholder="Nhập nghề nghiệp khác" style="display:none; margin-top:10px"/>
 
-</body>
-</html>
+    <label>Tiền sử bệnh:</label>
+    <textarea name="history"></textarea>
+
+    <label>Tỉnh/Thành phố:</label>
+    <select name="tinh" id="tinh" onchange="loadXaPhuong()">
+      <option value="">--Chọn tỉnh/thành phố--</option>
+      <?php
+        foreach($thanhpho_list as $i){
+          echo '<option value="'.$i['matinhthanhpho'].'">'.$i['tentinhthanhpho'].'</option>';
+        }
+      ?>
+    </select>
+    <label>Xã/Phường:</label>
+    <select name="xa" id="xa">
+        <option value="">--Chọn Xã/Phường--</option>
+    </select>
+    <label>Số nhà:</label>
+    <input type="text" name="sonha">
+    
+    <label>Mật khẩu:</label>
+    <input type="password" name="password" required>
+    <label>Nhập lại mật khẩu:</label>
+    <input type="password" name="confirm-password" required>
+
+    <!-- Thông tin giám hộ -->
+    <div id="guardian-info" style="display:none; margin-top:20px; border:1px solid #ccc; padding:10px;border-radius:6px">
+      <h3>Thông tin người giám hộ</h3>
+      <label>Họ tên:</label>
+      <input type="text" name="gh_hoten">
+      <label>Ngày sinh:</label>
+      <input type="date" name="gh_dob">
+      <label>Tỉnh/Thành phố:</label>
+      <select name="gh_tinh" id="gh_tinh" onchange="gh_loadXaPhuong()">
+        <option value="">--Chọn tỉnh/thành phố--</option>
+        <?php
+          foreach($thanhpho_list as $i){
+            echo '<option value="'.$i['matinhthanhpho'].'">'.$i['tentinhthanhpho'].'</option>';
+          }
+        ?>
+      </select>
+      <label>Xã/Phường:</label>
+      <select name="gh_xa" id="gh_xa">
+          <option value="">--Chọn Xã/Phường--</option>
+      </select>
+      <label>Số điện thoại:</label>
+      <input type="text" name="gh_sdt">
+      <label>Số CCCD</label>
+      <input type="text" name="gh_cccd">
+      <label>CCCD mặt trước</label>
+      <input type="file" name="gh_cccd_truoc" accept="image/*" onchange="previewImage(this, 'preview-gh-truoc')">
+      <img id="preview-gh-truoc" class="cccd-preview" style="display:none"/>
+
+      <label>CCCD mặt sau:</label>
+      <input type="file" name="gh_cccd_sau" accept="image/*" onchange="previewImage(this, 'preview-gh-sau')">
+      <img id="preview-gh-sau" class="cccd-preview" style="display:none"/>
+    </div>
+
+    <button type="submit">Đăng ký</button>
+  </form>
+</div>
