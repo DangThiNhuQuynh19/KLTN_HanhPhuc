@@ -304,7 +304,7 @@ error_reporting(0);
                     <li><a href="?action=vechungtoi" class="<?php echo (isset($_REQUEST['action']) && $_REQUEST['action'] === 'vechungtoi') ? 'active' : ''; ?>">Về chúng tôi</a></li>
                     <li><a href="?action=chuyenkhoa" class="<?php echo (isset($_REQUEST['action']) && $_REQUEST['action'] === 'chuyenkhoa') ? 'active' : ''; ?>">Chuyên khoa</a></li>
                     <li><a href="?action=bacsi" class="<?php echo (isset($_REQUEST['action']) && $_REQUEST['action'] === 'bacsi') ? 'active' : ''; ?>">Bác sĩ</a></li>
-                    <li><a href="?action=chuyengiatuvan" class="<?php echo (isset($_REQUEST['action']) && $_REQUEST['action'] === 'chuyengiatuvan') ? 'active' : ''; ?>">Chuyên gia tư vấn</a></li>
+                    <li><a href="?action=chuyengia" class="<?php echo (isset($_REQUEST['action']) && $_REQUEST['action'] === 'chuyengia') ? 'active' : ''; ?>">Chuyên gia tư vấn</a></li>
                     <li><a href="?action=lienhe" class="<?php echo (isset($_REQUEST['action']) && $_REQUEST['action'] === 'lienhe') ? 'active' : ''; ?>">Liên hệ</a></li>
                     <li><a href="?action=blog" class="<?php echo (isset($_REQUEST['action']) && $_REQUEST['action'] === 'blog') ? 'active' : ''; ?>">Blog</a></li>
                 </ul>

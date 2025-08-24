@@ -1,23 +1,23 @@
 <?php
-include_once("Controllers/cbacsi.php");
+include_once("Controllers/cchuyengia.php");
 include_once("Controllers/clichkham.php");
 
-// Kiểm tra id bác sĩ
+// Kiểm tra id chuyên gia
 if (!isset($_GET['id'])) {
-    echo "Không tìm thấy bác sĩ.";
+    echo "Không tìm thấy chuyên gia.";
     exit;
 }
-$mabacsi = $_GET['id'];
+$machuyengia = $_GET['id'];
 $ngay = isset($_GET['ngay']) ? $_GET['ngay'] : date('Y-m-d'); // Nếu chưa chọn ngày thì lấy ngày hôm nay
-// Lấy thông tin bác sĩ
-$cBacSi = new cBacSi();
-$bacsi = $cBacSi->getBacSiById($mabacsi);
+// Lấy thông tin chuyên gia
+$cChuyenGia = new cChuyenGia();
+$chuyengia = $cChuyenGia->getChuyenGiaById($machuyengia);
 
-if (!$bacsi || $bacsi->num_rows === 0) {
-    echo "Không tìm thấy thông tin bác sĩ.";
+if (!$chuyengia || $chuyengia->num_rows === 0) {
+    echo "Không tìm thấy thông tin chuyên gia.";
     exit;
 }
-$row = $bacsi->fetch_assoc();
+$row = $chuyengia->fetch_assoc();
 // Đặt múi giờ chính xác
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 // Lấy giờ hiện tại
@@ -25,7 +25,7 @@ $gioHienTai = date('H:i:s'); // Giờ hiện tại dưới định dạng H:i:s
 $ngayHienTai = date('Y-m-d'); // Ngày hiện tại
 
 $cLichKham = new cLichKham();
-$lichkham = $cLichKham->getLichKhamOfBacSiByNgay($ngay, $mabacsi, $gioHienTai);
+$lichkham = $cLichKham->getLichKhamOfChuyenGiaByNgay($ngay, $machuyengia, $gioHienTai);
 
 ?>
 
@@ -134,18 +134,18 @@ $lichkham = $cLichKham->getLichKhamOfBacSiByNgay($ngay, $mabacsi, $gioHienTai);
 </style>
 
 <div class="container">
-    <!-- Thông tin bác sĩ -->
+    <!-- Thông tin chuyên gia -->
     <div class="doctor-header">
-        <img src="Assets/img/<?php echo htmlspecialchars($row['imgbs']); ?>" alt="Ảnh bác sĩ">
+        <img src="Assets/img/<?php echo htmlspecialchars($row['imgcg']); ?>" alt="Ảnh chuyên gia">
         <div class="doctor-info">
             <h2><?php echo htmlspecialchars($row['capbac']) . ' ' . htmlspecialchars($row['hoten']); ?></h2>
-            <p><strong>Chuyên khoa:</strong> <?php echo htmlspecialchars($row['tenchuyenkhoa']); ?></p>
+            <p><strong>Lĩnh vực:</strong> <?php echo htmlspecialchars($row['tenlinhvuc']); ?></p>
             <p><strong>Thông tin mô tả:</strong></p>
 
             <!-- Nội dung mô tả thu gọn -->
             <div id="short-description">
                 <?php
-                    $motangan = mb_substr(strip_tags($row['motabs']), 0, 800); // Lấy 200 ký tự đầu
+                    $motangan = mb_substr(strip_tags($row['motacg']), 0, 800); // Lấy 200 ký tự đầu
                     echo nl2br(htmlspecialchars($motangan)) . '...';
                 ?>
             </div>
@@ -153,9 +153,9 @@ $lichkham = $cLichKham->getLichKhamOfBacSiByNgay($ngay, $mabacsi, $gioHienTai);
             <!-- Nội dung mô tả đầy đủ -->
             <div id="full-description" style="display: none;">
                 <?php
-                    echo nl2br(htmlspecialchars($row['motabs']));
+                    echo nl2br(htmlspecialchars($row['motacg']));
                     echo '<br><br>';
-                    echo nl2br(htmlspecialchars($row['gioithieubs']));
+                    echo nl2br(htmlspecialchars($row['gioithieucg']));
                 ?>
             </div>
 
@@ -167,8 +167,8 @@ $lichkham = $cLichKham->getLichKhamOfBacSiByNgay($ngay, $mabacsi, $gioHienTai);
 
     <!-- Form chọn ngày và giờ -->
     <form method="get" id="form-ngay" class="date-picker">
-        <input type="hidden" name="action" value="chitietbacsi">
-        <input type="hidden" name="id" value="<?php echo $mabacsi; ?>">
+        <input type="hidden" name="action" value="chitietchuyengia">
+        <input type="hidden" name="id" value="<?php echo $machuyengia; ?>">
         <input type="hidden" name="giohientai" id="giohientai" value="">
 
         <label for="ngay">Chọn ngày khám:</label>
@@ -202,12 +202,12 @@ $lichkham = $cLichKham->getLichKhamOfBacSiByNgay($ngay, $mabacsi, $gioHienTai);
             $link = "";
             if ($ngay == $ngayHienTai) {
                 if ($giobatdau >= $gioHienTai) {
-                    $link = '<a href="index.php?action=datlichkham&idbs=' . $mabacsi . '&ngay=' . $ngay . '&ca=' . $macalamviec . '">' . $giobatdau . ' - ' . $gioketthuc . '</a>';
+                    $link = '<a href="index.php?action=datlichkham&idcg=' . $machuyengia . '&ngay=' . $ngay . '&ca=' . $macalamviec . '">' . $giobatdau . ' - ' . $gioketthuc . '</a>';
                 } else {
                     $link = "<p>Ca này đã qua.</p>";
                 }
             } else {
-                $link = '<a href="index.php?action=datlichkham&idbs=' . $mabacsi . '&ngay=' . $ngay . '&ca=' . $macalamviec . '">' . $giobatdau . ' - ' . $gioketthuc . '</a>';
+                $link = '<a href="index.php?action=datlichkham&idcg=' . $machuyengia . '&ngay=' . $ngay . '&ca=' . $macalamviec . '">' . $giobatdau . ' - ' . $gioketthuc . '</a>';
             }
 
             // Phân loại

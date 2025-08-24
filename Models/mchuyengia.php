@@ -63,5 +63,22 @@ require_once('ketnoi.php');
                 return false; 
             }
         }
+        public function chitietchuyengia($id){
+            $p = new clsKetNoi();
+            $con = $p->moketnoi();
+            $con->set_charset('utf8');
+            if($con){
+                $str = "select * from chuyengia 
+                        join linhvuc on chuyengia.malinhvuc = linhvuc.malinhvuc 
+                        join nguoidung on chuyengia.machuyengia = nguoidung.manguoidung
+                        join taikhoan on nguoidung.tentk = taikhoan.tentk
+                        where taikhoan.matrangthai = 1 and chuyengia.machuyengia='$id'";
+                $tbl = $con->query($str);
+                $p->dongketnoi($con);
+                return $tbl;
+            }else{
+                return false; 
+            }
+        }
     }
 ?>
