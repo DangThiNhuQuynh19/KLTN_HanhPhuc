@@ -4,7 +4,7 @@ include_once(__DIR__ . '/../Models/mlichkham.php');
 class cLichKham {
     public function getLichKhamOfBacSiByNgay($ngay, $id, $gioHienTai = null) {
         $p = new mLichKham();
-        $tbl = $p->lichkham($ngay, $id, $gioHienTai);
+        $tbl = $p->lichkhambs($ngay, $id, $gioHienTai);
     
         if (!$tbl) {
             return false;
@@ -12,7 +12,16 @@ class cLichKham {
             return ($tbl->num_rows > 0) ? $tbl : false;
         }
     }
+    public function getLichKhamOfChuyenGiaByNgay($ngay, $id, $gioHienTai = null) {
+        $p = new mLichKham();
+        $tbl = $p->lichkhamcg($ngay, $id, $gioHienTai);
     
+        if (!$tbl) {
+            return false;
+        } else {
+            return ($tbl->num_rows > 0) ? $tbl : false;
+        }
+    }
     
     public function getlich($id){
         $p = new mLichKham();

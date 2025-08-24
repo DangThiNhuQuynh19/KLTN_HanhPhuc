@@ -24,7 +24,7 @@ require_once('ketnoi.php');
             $con = $p->moketnoi();
             $con->set_charset('utf8');
             if($con){
-                $str = "select nguoidung.hoten, bacsi.motabs, bacsi.gioithieubs,bacsi.imgbs, bacsi.capbac from bacsi 
+                $str = "select * from bacsi 
                         join chuyenkhoa on bacsi.machuyenkhoa = chuyenkhoa.machuyenkhoa 
                         join nguoidung on bacsi.mabacsi = nguoidung.manguoidung
                         join taikhoan on nguoidung.tentk = taikhoan.tentk
@@ -44,7 +44,8 @@ require_once('ketnoi.php');
             if($con){
                 $str = "SELECT * FROM bacsi
                 JOIN chuyenkhoa ON bacsi.machuyenkhoa = chuyenkhoa.machuyenkhoa
-                WHERE bacsi.hoten LIKE '%$name%'";
+                JOIN nguoidung ON bacsi.mabacsi = nguoidung.manguoidung
+                WHERE nguoidung.hoten LIKE '%$name%'";
                 $tbl = $con->query($str);
                 $p->dongketnoi($con);
                 return $tbl;
@@ -72,7 +73,8 @@ require_once('ketnoi.php');
             if($con){
                 $str = "SELECT * FROM bacsi 
                 JOIN chuyenkhoa ON bacsi.machuyenkhoa = chuyenkhoa.machuyenkhoa 
-                WHERE bacsi.hoten LIKE '%$name%' AND bacsi.machuyenkhoa='$id'";
+                JOIN nguoidung ON bacsi.mabacsi = nguoidung.manguoidung
+                WHERE nguoidung.hoten LIKE '%$name%' AND bacsi.machuyenkhoa='$id'";
                 $tbl = $con->query($str);
                 $p->dongketnoi($con);
                 return $tbl;
