@@ -1,0 +1,276 @@
+
+.patient-info {
+display: flex;
+gap: 20px;
+}
+
+.patient-avatar {
+width: 80px;
+height: 80px;
+background-color: var(--light-gray);
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 30px;
+color: var(--gray);
+}
+
+.patient-details {
+flex: 1;
+min-width: 300px;
+}
+
+.patient-name {
+font-size: 25px;
+font-weight: 600;
+color: var(--dark);
+margin-bottom: 8px;
+}
+
+.patient-id {
+font-size: 20px;
+color: var(--gray);
+margin-bottom: 12px;
+display: inline-block;
+background-color: var(--light-gray);
+padding: 4px 12px;
+border-radius: 20px;
+}
+
+.patient-data {
+font-size: 13px;
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+gap: 12px;
+}
+
+.patient-data-item {
+margin-bottom: 8px;
+}
+
+.data-label {
+font-size: 13px;
+color: var(--gray);
+margin-bottom: 4px;
+}
+
+.data-value {
+font-weight: 500;
+color: var(--dark);
+}
+
+.row {
+display: flex;
+flex-wrap: wrap;
+margin: -10px;
+}
+
+.col-md-6 {
+flex: 0 0 50%;
+max-width: 50%;
+padding: 10px;
+}
+
+@media (max-width: 768px) {
+.col-md-6 {
+flex: 0 0 100%;
+max-width: 100%;
+}
+}
+
+.info-row {
+margin-bottom: 15px;
+}
+
+.info-label {
+font-size: 14px;
+color: var(--gray);
+margin-bottom: 5px;
+}
+
+.info-value {
+font-weight: 500;
+}
+
+.tabs {
+margin-bottom: 20px;
+}
+
+.tab-header {
+display: flex;
+border-bottom: 1px solid var(--light-gray);
+margin-bottom: 20px;
+}
+
+.tab-link {
+padding: 10px 20px;
+color: var(--gray);
+text-decoration: none;
+border-bottom: 2px solid transparent;
+transition: all 0.3s ease;
+}
+
+.tab-link:hover {
+color: var(--primary-color);
+}
+
+.tab-link.active {
+color: var(--primary-color);
+border-bottom-color: var(--primary-color);
+font-weight: 500;
+}
+
+.tab-content {
+display: none;
+}
+
+.tab-content.active {
+display: block;
+}
+
+.data-table {
+width: 100%;
+border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+padding: 12px 15px;
+text-align: left;
+border-bottom: 1px solid var(--light-gray);
+}
+
+.data-table th {
+background-color: var(--secondary-color);
+font-weight: 600;
+color: var(--dark);
+}
+
+.data-table tr:hover {
+background-color: rgba(0, 0, 0, 0.02);
+}
+
+.modal {
+display: none; /* Ẩn ban đầu */
+position: fixed;
+z-index: 1000;
+left: 0;
+top: 0;
+width: 100vw;
+height: 100vh;
+overflow: auto;
+background-color: rgba(0,0,0,0.4); /* nền mờ */
+}
+
+.modal-content {
+background-color: #fff;
+margin: 5% auto;
+padding: 20px;
+border-radius: 10px;
+width: 80%;
+max-width: 800px;
+box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+position: relative;
+max-height: 80vh;
+overflow-y: auto;
+}
+
+.close {
+position: absolute;
+top: 10px;
+right: 15px;
+font-size: 24px;
+font-weight: bold;
+color: #333;
+cursor: pointer;
+}
+
+.form-row {
+display: flex;
+flex-wrap: wrap;
+margin: -10px;
+}
+
+.form-col {
+flex: 1;
+padding: 10px;
+min-width: 200px;
+}
+
+.form-group {
+margin-bottom: 15px;
+}
+
+.form-group label {
+display: block;
+margin-bottom: 5px;
+font-weight: 500;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+width: 100%;
+padding: 8px 12px;
+border: 1px solid #ddd;
+border-radius: 4px;
+font-size: 14px;
+}
+
+.form-group textarea {
+resize: vertical;
+min-height: 80px;
+}
+
+.form-title {
+margin-bottom: 15px;
+font-size: 18px;
+font-weight: 500;
+color: var(--dark);
+}
+
+.medication-form {
+background-color: var(--secondary-color);
+padding: 15px;
+border-radius: 8px;
+margin-bottom: 20px;
+}
+
+.medication-table {
+width: 100%;
+border-collapse: collapse;
+margin-top: 10px;
+}
+
+.medication-table th,
+.medication-table td {
+padding: 10px;
+text-align: left;
+border-bottom: 1px solid #ddd;
+}
+
+.medication-table th {
+background-color: var(--light-gray);
+font-weight: 500;
+}
+
+.action-buttons {
+display: flex;
+gap: 5px;
+}
+
+@media print {
+.action-buttons, .back-button, .tab-header, .main-footer {
+display: none;
+}
+
+.card {
+box-shadow: none;
+border: 1px solid #ddd;
+}
+
+body {
+background-color: white;
+}
+}
