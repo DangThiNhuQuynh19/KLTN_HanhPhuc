@@ -3,9 +3,9 @@ include_once(__DIR__ . "/../Models/mtaikhoan.php");
 
 class ctaiKhoan {
     // Đăng ký tài khoản
-    public function dangkytk($email, $hoten, $ngaysinh, $mk) {
+    public function dangkytk ($mabenhnhan, $email, $hoten, $ngaysinh, $sdt, $cccd, $cccd_truoc_name, $birth_cert_name, $cccd_sau_name, $gioitinh, $nghenghiep, $tiensucuagiadinh, $tiensucuabanthan, $sonha, $xa, $tinh, $matkhau, $manguoigiamho,$gh_hoten, $gh_dob, $gh_diachi, $gh_sdt,$gh_email, $gh_cccd, $gh_cccd_truoc_name, $gh_cccd_sau_name)  {
         $mNguoiDung = new mtaikhoan();
-        return $mNguoiDung->dangkytk($email, $hoten, $ngaysinh, $mk);
+        return $mNguoiDung->dangkytk ($mabenhnhan, $email, $hoten, $ngaysinh, $sdt, $cccd, $cccd_truoc_name, $birth_cert_name, $cccd_sau_name, $gioitinh, $nghenghiep, $tiensucuagiadinh, $tiensucuabanthan, $sonha, $xa, $tinh, $matkhau, $manguoigiamho,$gh_hoten, $gh_dob, $gh_diachi, $gh_sdt,$gh_email, $gh_cccd, $gh_cccd_truoc_name, $gh_cccd_sau_name) ;
     }
 
     public function dangnhap($email, $mk) {

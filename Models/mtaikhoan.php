@@ -10,34 +10,56 @@ class mtaikhoan{
     }
 
     // Đăng ký tài khoản
-    public function dangkytk($email, $hoten, $ngaysinh, $mk) {
+    public function dangkytk ($mabenhnhan, $email, $hoten, $ngaysinh, $sdt, $cccd, $cccd_truoc_name, $birth_cert_name, $cccd_sau_name, $gioitinh, $nghenghiep, $tiensucuagiadinh, $tiensucuabanthan, $sonha, $xa, $tinh, $matkhau, $manguoigiamho,$gh_hoten, $gh_dob, $gh_diachi, $gh_sdt,$gh_email, $gh_cccd, $gh_cccd_truoc_name, $gh_cccd_sau_name) {
         // Kiểm tra email đã tồn tại
+        $dantoc='kinh';
         $stmtCheck = $this->conn->prepare("SELECT * FROM taikhoan WHERE tentk = ?");
         $stmtCheck->bind_param("s", $email);
         $stmtCheck->execute();
         $result = $stmtCheck->get_result();
-    
+        
         if ($result->num_rows > 0) {
             return "email_ton_tai"; // Nếu email đã tồn tại
         }
     
-        // Băm mật khẩu bằng password_hash (sử dụng bcrypt mặc định)
-        $hashedPassword = md5($mk);
+        // Băm mật khẩu (tốt hơn nên dùng password_hash)
+        $hashedPassword = md5($matkhau);
     
         // Thêm vào bảng taikhoan
-        $stmtInsertTK = $this->conn->prepare("INSERT INTO taikhoan (tentk, matkhau, vaitro) VALUES (?, ?, 1)");
+        $stmtInsertTK = $this->conn->prepare("INSERT INTO taikhoan (tentk, matkhau, mavaitro, matrangthai) VALUES (?, ?, 1,1)");
         $stmtInsertTK->bind_param("ss", $email, $hashedPassword);
+        
         if ($stmtInsertTK->execute()) {
-            // Thêm vào bảng benhnhan
-            $quanhe = "bản thân";
-            $stmtInsertBN = $this->conn->prepare("INSERT INTO benhnhan (hotenbenhnhan, ngaysinh, email, quanhe, tentk) VALUES (?, ?, ?, ?, ?)");
-            $stmtInsertBN->bind_param("sssss", $hoten, $ngaysinh, $email, $quanhe, $email);
-            return $stmtInsertBN->execute() ? true : "Lỗi khi thêm bệnh nhân.";
+            // Tính tuổi bệnh nhân
+            $today = new DateTime();
+            $dob = new DateTime($ngaysinh);
+            $age = $today->diff($dob)->y;
+    
+            // Thêm vào bảng nguoidung
+            $stmtInsertND = $this->conn->prepare("INSERT INTO nguoidung (manguoidung, hoten, ngaysinh, gioitinh, cccd, cccd_matruoc, cccd_matsau, giaykhaisinh, dantoc, sdt, sonha, maxaphuong, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmtInsertND->bind_param("sssssssssssss", $mabenhnhan, $hoten, $ngaysinh, $gioitinh, $cccd, $cccd_truoc_name, $cccd_sau_name, $birth_cert_name, $dantoc, $sdt, $sonha, $xa, $email);
+            
+            if($stmtInsertND->execute()){
+                // Nếu <16 hoặc >60 thì mới thêm người giám hộ
+                if($age < 16 || $age > 60){
+                    $stmtInsertNGH = $this->conn->prepare("INSERT INTO nguoigiamho(manguoigiamho, hoten, email, diachi) VALUES(?,?,?,?)");
+                    $stmtInsertNGH->bind_param("ssss", $manguoigiamho, $gh_hoten, $gh_email, $gh_diachi);
+                    if(!$stmtInsertNGH->execute()){
+                        return "Lỗi khi thêm người giám hộ.";
+                    }
+                }
+    
+                // Thêm bệnh nhân
+                $stmtInsertBN = $this->conn->prepare("INSERT INTO benhnhan(mabenhnhan, nghenghiep, tiensubenhtatcuagiadinh, tiensubenhtatcuabenhnhan, manguoigiamho) VALUES (?, ?, ?, ?, ?)");
+                $stmtInsertBN->bind_param("sssss", $mabenhnhan, $nghenghiep, $tiensucuagiadinh, $tiensucuabanthan, $manguoigiamho);
+                return $stmtInsertBN->execute() ? true : "Lỗi khi thêm bệnh nhân.";
+            } else {
+                return "Lỗi khi thêm thông tin người dùng.";
+            }
         } else {
             return "Lỗi khi tạo tài khoản.";
         }
     }
-    
     public function select_01_taikhoan($tentk, $matkhau) {
         $truyvan = "SELECT * FROM taikhoan WHERE tentk = ? and matkhau= ?";
         $stmt = $this->conn->prepare($truyvan);
